@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Area Color Changer</title>
+</head>
+<body>
+
+<h2>🎯 Draw & Change Color</h2>
+
+<input type="file" id="upload"><br><br>
+
+<label>Pick Color:</label>
+<input type="color" id="color" value="#00ff00"><br><br>
+
+<canvas id="canvas"></canvas><br><br>
+
+<button onclick="processImage()">Apply Color</button>
+
+<h3>Result:</h3>
+<img id="result">
+
+<script>
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
+let drawing = false;
+
+document.getElementById("upload").onchange = function(e) {
+    let img = new Image();
+    img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+    };
+    img.src = URL.createObjectURL(e.target.files[0]);
+};
+
+canvas.onmousedown = () => drawing = true;
+canvas.onmouseup = () => drawing = false;
+
+canvas.onmousemove = function(e) {
+    if (!drawing) return;
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(e.offsetX, e.offsetY, 10, 0, Math.PI * 2);
+    ctx.fill();
+};
+
+function processImage() {
+    let imageData = canvas.toDataURL("image/png");
+    let color = document.getElementById("color").value;
+
+    fetch("/process", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            image: imageData,
+            color: color
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").src =
+            "data:image/png;base64," + data.image;
+    });
+}
+</script>
+
+</body>
+</html>
